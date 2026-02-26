@@ -8,3 +8,6 @@ Este es el repositorio del proyecto del sistema de reservas de las aulas especia
 - Brayan Leon
 ## Tecnologias Usadas
 - Javascript (react) 
+
+## Link Requerimientos excel Backlog
+https://docs.google.com/spreadsheets/d/1xsQyZ8mjn2Kn4pEsktL7MOKL2paRmN7q/edit?gid=2043009634#gid=2043009634
