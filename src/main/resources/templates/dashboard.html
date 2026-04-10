@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ReservaAulas</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <a href="/dashboard" class="navbar-brand">🏫 ReservaAulas</a>
+    <ul class="navbar-nav">
+        <li>
+            <a href="/dashboard" class="nav-link active">🏠 Inicio</a>
+        </li>
+        <li>
+            <a href="/nueva-reserva" class="nav-link">📅 Nueva Reserva</a>
+        </li>
+        <li>
+            <a href="/mis-reservas" class="nav-link">📋 Mis Reservas</a>
+        </li>
+        <li>
+            <a href="/notificaciones" class="nav-link" id="linkNotif">
+                🔔 Notificaciones
+                <span class="nav-badge" id="badgeNotif"
+                      th:class="${notificacionesNoLeidas > 0} ? 'nav-badge' : 'nav-badge hidden'"
+                      th:text="${notificacionesNoLeidas}">0</span>
+            </a>
+        </li>
+        <li>
+            <a href="#" class="nav-link" onclick="abrirConfiguracion()">
+                ⚙️ Configuración
+            </a>
+        </li>
+        <li>
+            <a href="#" class="nav-link" onclick="cerrarSesion()" 
+               style="color: var(--danger)">
+                🚪 Salir
+            </a>
+        </li>
+    </ul>
+</nav>
+
+<!-- CONTENIDO -->
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">
+                👋 Hola, <span th:text="${nombre}">Usuario</span>
+            </h1>
+            <p class="page-subtitle">
+                ¿Qué necesitas hacer hoy?
+            </p>
+        </div>
+    </div>
+    
+    <!-- TARJETAS DE ACCIONES RÁPIDAS -->
+    <div class="stats-grid">
+        <div class="stat-card" style="cursor:pointer" 
+             onclick="window.location.href='/nueva-reserva'">
+            <div class="stat-number" style="color: var(--primary)">📅</div>
+            <div class="stat-label">Nueva Reserva</div>
+            <p style="font-size:0.8rem; color: var(--gray-400); margin-top:0.5rem">
+                Reserva un aula
+            </p>
+        </div>
+        <div class="stat-card" style="cursor:pointer" 
+             onclick="window.location.href='/mis-reservas'">
+            <div class="stat-number" style="color: var(--success)">📋</div>
+            <div class="stat-label">Mis Reservas</div>
+            <p style="font-size:0.8rem; color: var(--gray-400); margin-top:0.5rem">
+                Ver mis solicitudes
+            </p>
+        </div>
+        <div class="stat-card" style="cursor:pointer" 
+             onclick="window.location.href='/notificaciones'">
+            <div class="stat-number" style="color: var(--warning)">🔔</div>
+            <div class="stat-label">Notificaciones</div>
+            <p style="font-size:0.8rem; color: var(--gray-400); margin-top:0.5rem">
+                <span th:if="${notificacionesNoLeidas > 0}" 
+                      th:text="${notificacionesNoLeidas} + ' sin leer'" 
+                      style="color:var(--danger); font-weight:700"></span>
+                <span th:unless="${notificacionesNoLeidas > 0}">
+                    Sin notificaciones nuevas
+                </span>
+            </p>
+        </div>
+        <div class="stat-card" style="cursor:pointer" 
+             onclick="abrirConfiguracion()">
+            <div class="stat-number" style="color: var(--gray-600)">⚙️</div>
+            <div class="stat-label">Configuración</div>
+            <p style="font-size:0.8rem; color: var(--gray-400); margin-top:0.5rem">
+                Editar mis datos
+            </p>
+        </div>
+    </div>
+
+    <!-- INFORMACIÓN -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">ℹ️ Cómo funciona el sistema</div>
+        </div>
+        <div style="display: grid; gap: 1rem;">
+            <div style="display:flex; gap:1rem; align-items:flex-start">
+                <span style="font-size:1.5rem">1️⃣</span>
+                <div>
+                    <strong>Haz tu reserva</strong>
+                    <p class="text-muted" style="font-size:0.9rem">
+                        Elige el aula, fecha y horario que necesitas y completa 
+                        el formulario con tus datos de contacto y motivo.
+                    </p>
+                </div>
+            </div>
+            <div style="display:flex; gap:1rem; align-items:flex-start">
+                <span style="font-size:1.5rem">2️⃣</span>
+                <div>
+                    <strong>Espera la aprobación</strong>
+                    <p class="text-muted" style="font-size:0.9rem">
+                        El administrador revisará tu solicitud y la aprobará 
+                        o rechazará con un mensaje explicativo.
+                    </p>
+                </div>
+            </div>
+            <div style="display:flex; gap:1rem; align-items:flex-start">
+                <span style="font-size:1.5rem">3️⃣</span>
+                <div>
+                    <strong>Recibe la notificación</strong>
+                    <p class="text-muted" style="font-size:0.9rem">
+                        Recibirás una notificación con la respuesta del 
+                        administrador en tu feed de notificaciones.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CONFIGURACIÓN -->
+<div class="modal-overlay hidden" id="modalConfig">
+    <div class="modal">
+        <div class="modal-title">⚙️ Configuración de cuenta</div>
+        
+        <div id="alertaConfig" class="alert hidden"></div>
+        
+        <div class="form-group">
+            <label class="form-label">Nombre completo</label>
+            <input type="text" id="configNombre" class="form-control" 
+                   placeholder="Tu nombre">
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Correo electrónico</label>
+            <input type="email" id="configEmail" class="form-control" 
+                   disabled style="background:var(--gray-100)">
+            <p style="font-size:0.75rem; color:var(--gray-400); margin-top:0.25rem">
+                El correo no se puede cambiar
+            </p>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Teléfono de contacto</label>
+            <input type="tel" id="configTelefono" class="form-control" 
+                   placeholder="Tu teléfono">
+        </div>
+        
+        <div class="modal-actions">
+            <button class="btn btn-outline" 
+                    onclick="cerrarConfiguracion()">Cancelar</button>
+            <button class="btn btn-primary" 
+                    onclick="guardarConfiguracion()">Guardar cambios</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="/js/firebase-init.js"></script>
+<script>
+    function cerrarSesion() {
+        auth.signOut().then(() => {
+            fetch('/api/auth/logout', { method: 'POST' })
+                .finally(() => window.location.href = '/login');
+        });
+    }
+    
+    async function abrirConfiguracion() {
+        // Carga los datos actuales del usuario
+        try {
+            const resp = await fetch('/api/usuario/actual');
+            const data = await resp.json();
+            if (data.success) {
+                document.getElementById('configNombre').value = data.nombre || '';
+                document.getElementById('configEmail').value = data.email || '';
+                document.getElementById('configTelefono').value = data.telefono || '';
+            }
+        } catch (e) { console.error(e); }
+        
+        document.getElementById('modalConfig').classList.remove('hidden');
+    }
+    
+    function cerrarConfiguracion() {
+        document.getElementById('modalConfig').classList.add('hidden');
+    }
+    
+    async function guardarConfiguracion() {
+        const nombre = document.getElementById('configNombre').value.trim();
+        const telefono = document.getElementById('configTelefono').value.trim();
+        
+        if (!nombre) {
+            mostrarAlerta('alertaConfig', 'El nombre no puede estar vacío');
+            return;
+        }
+        
+        try {
+            const resp = await fetch('/api/usuario/actualizar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, telefono })
+            });
+            const data = await resp.json();
+            
+            if (data.success) {
+                mostrarAlerta('alertaConfig', '✅ Datos actualizados', 'success');
+                setTimeout(() => cerrarConfiguracion(), 2000);
+            } else {
+                mostrarAlerta('alertaConfig', data.error || 'Error al guardar');
+            }
+        } catch (e) {
+            mostrarAlerta('alertaConfig', 'Error de conexión');
+        }
+    }
+    
+    // Cierra el modal al hacer clic fuera
+    document.getElementById('modalConfig').addEventListener('click', function(e) {
+        if (e.target === this) cerrarConfiguracion();
+    });
+</script>
+</body>
+</html>

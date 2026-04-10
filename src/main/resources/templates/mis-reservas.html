@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Reservas - ReservaAulas</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/dashboard" class="navbar-brand">🏫 ReservaAulas</a>
+    <ul class="navbar-nav">
+        <li><a href="/dashboard" class="nav-link">🏠 Inicio</a></li>
+        <li><a href="/nueva-reserva" class="nav-link">📅 Nueva Reserva</a></li>
+        <li><a href="/mis-reservas" class="nav-link active">📋 Mis Reservas</a></li>
+        <li>
+            <a href="/notificaciones" class="nav-link">
+                🔔 Notificaciones
+                <span class="nav-badge" id="badgeNotif"
+                      th:class="${notificacionesNoLeidas > 0} ? 'nav-badge' : 'nav-badge hidden'"
+                      th:text="${notificacionesNoLeidas}">0</span>
+            </a>
+        </li>
+        <li>
+            <a href="#" class="nav-link" onclick="cerrarSesion()" 
+               style="color: var(--danger)">🚪 Salir</a>
+        </li>
+    </ul>
+</nav>
+
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">📋 Mis Reservas</h1>
+            <p class="page-subtitle">Historial de tus solicitudes de reserva</p>
+        </div>
+        <a href="/nueva-reserva" class="btn btn-primary">
+            + Nueva Reserva
+        </a>
+    </div>
+    
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    
+    <!-- Si no hay reservas -->
+    <div th:if="${#lists.isEmpty(reservas)}" class="card text-center" 
+         style="padding: 3rem">
+        <p style="font-size:3rem; margin-bottom:1rem">📭</p>
+        <p style="font-size:1.1rem; color: var(--gray-600)">
+            Aún no tienes reservas
+        </p>
+        <p class="text-muted mb-2">
+            ¡Solicita tu primera reserva ahora!
+        </p>
+        <a href="/nueva-reserva" class="btn btn-primary">
+            Hacer mi primera reserva
+        </a>
+    </div>
+    
+    <!-- Tabla de reservas -->
+    <div th:unless="${#lists.isEmpty(reservas)}" class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Aula</th>
+                    <th>Fecha</th>
+                    <th>Horario</th>
+                    <th>Motivo</th>
+                    <th>Estado</th>
+                    <th>Mensaje del Admin</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="reserva : ${reservas}">
+                    <td>
+                        <strong th:text="${reserva.aula}">Aula 101</strong>
+                    </td>
+                    <td th:text="${reserva.fecha}">2024-01-15</td>
+                    <td>
+                        <span th:text="${reserva.horaInicio}">08:00</span> - 
+                        <span th:text="${reserva.horaFin}">09:30</span>
+                    </td>
+                    <td>
+                        <span th:text="${#strings.abbreviate(reserva.motivo, 40)}">
+                            Motivo...
+                        </span>
+                    </td>
+                    <td>
+                        <span th:class="'badge badge-' + ${#strings.toLowerCase(reserva.estado)}"
+                              th:text="${reserva.estado}">PENDIENTE</span>
+                    </td>
+                    <td>
+                        <span th:if="${reserva.mensajeAdmin != null and !reserva.mensajeAdmin.isEmpty()}"
+                              th:text="${reserva.mensajeAdmin}"
+                              style="font-size:0.875rem; color: var(--gray-600)">
+                        </span>
+                        <span th:unless="${reserva.mensajeAdmin != null and !reserva.mensajeAdmin.isEmpty()}"
+                              class="text-muted" style="font-size:0.875rem">
+                            Sin mensaje
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="/js/firebase-init.js"></script>
+<script>
+    function cerrarSesion() {
+        auth.signOut().then(() => {
+            fetch('/api/auth/logout', { method: 'POST' })
+                .finally(() => window.location.href = '/login');
+        });
+    }
+</script>
+</body>
+</html>

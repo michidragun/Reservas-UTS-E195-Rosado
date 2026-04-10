@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Reservas de Aulas</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <h1>🏫 ReservaAulas</h1>
+            <p>Crear cuenta nueva</p>
+        </div>
+        
+        <div id="alerta" class="alert hidden"></div>
+        
+        <div class="form-group">
+            <label class="form-label">Nombre completo</label>
+            <input type="text" id="nombre" class="form-control" 
+                   placeholder="Tu nombre completo">
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Correo electrónico</label>
+            <input type="email" id="email" class="form-control" 
+                   placeholder="tu@email.com">
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Teléfono de contacto</label>
+            <input type="tel" id="telefono" class="form-control" 
+                   placeholder="Ej: 3001234567">
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Contraseña</label>
+            <input type="password" id="password" class="form-control" 
+                   placeholder="Mínimo 6 caracteres">
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Confirmar contraseña</label>
+            <input type="password" id="password2" class="form-control" 
+                   placeholder="Repite la contraseña">
+        </div>
+        
+        <button id="btnRegistro" class="btn btn-primary btn-block btn-lg" 
+                onclick="registrarse()">
+            Crear Cuenta
+        </button>
+        
+        <div class="auth-divider">
+            <span>¿Ya tienes cuenta?</span>
+        </div>
+        
+        <a href="/login" class="btn btn-outline btn-block">
+            Iniciar sesión
+        </a>
+    </div>
+</div>
+
+<script src="/js/firebase-init.js"></script>
+<script>
+    async function registrarse() {
+        const nombre = document.getElementById('nombre').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const telefono = document.getElementById('telefono').value.trim();
+        const password = document.getElementById('password').value;
+        const password2 = document.getElementById('password2').value;
+        const btn = document.getElementById('btnRegistro');
+        
+        // Validaciones
+        if (!nombre || !email || !password || !password2) {
+            mostrarAlerta('alerta', 'Por favor completa todos los campos obligatorios');
+            return;
+        }
+        
+        if (password !== password2) {
+            mostrarAlerta('alerta', 'Las contraseñas no coinciden');
+            return;
+        }
+        
+        if (password.length < 6) {
+            mostrarAlerta('alerta', 'La contraseña debe tener al menos 6 caracteres');
+            return;
+        }
+        
+        btn.disabled = true;
+        btn.innerHTML = '<div class="loader"></div> Creando cuenta...';
+        ocultarAlerta('alerta');
+        
+        try {
+            // Crea el usuario en Firebase Auth
+            const userCredential = await auth.createUserWithEmailAndPassword(
+                email, password);
+            
+            // Actualiza el nombre en Firebase Auth
+            await userCredential.user.updateProfile({ displayName: nombre });
+            
+            // Crea la sesión y guarda datos adicionales
+            const result = await crearSesionServidor(userCredential.user);
+            
+            if (result.success) {
+                // Actualiza nombre y teléfono en Firestore
+                await fetch('/api/usuario/actualizar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, telefono })
+                });
+                
+                window.location.href = '/dashboard';
+            } else {
+                mostrarAlerta('alerta', result.error || 'Error al crear la sesión');
+            }
+        } catch (error) {
+            let mensaje = 'Error al crear la cuenta';
+            if (error.code === 'auth/email-already-in-use') 
+                mensaje = 'Ya existe una cuenta con ese correo';
+            else if (error.code === 'auth/invalid-email') 
+                mensaje = 'Correo electrónico inválido';
+            else if (error.code === 'auth/weak-password') 
+                mensaje = 'La contraseña es muy débil';
+            
+            mostrarAlerta('alerta', mensaje);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Crear Cuenta';
+        }
+    }
+</script>
+</body>
+</html>
